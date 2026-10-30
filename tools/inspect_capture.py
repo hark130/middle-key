@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_META_FILE_EXT
+from middle_key.demod import demod_am
 from middle_key.dsp import convert_samples_to_db, convert_power_to_db
 from middle_key.io import read_samples
 from middle_key.sigmfmetaparser import SigMFMetaParser
@@ -24,6 +25,14 @@ PLOT_MAX_POINTS: Final[int] = 4000   # Max points in the power-vs-time plot (scr
 PLOT_NFFT: Final[int] = 4096         # FFT size for the spectrum: 48 kS/s / 4096 = ~12 Hz bins
 PLOT_SPEC_NFFT: Final[int] = 1024    # FFT size for each spectrogram column: ~47 Hz bins, ~21 ms
 PLOT_SPEC_RANGE_DB: Final[int] = 80  # Spectrogram colors span this many dB below the peak
+
+
+def extract_voice(samples: np.ndarray, sample_rate: float) -> np.ndarray:
+    """Demodulate analog AM, remove the DC, and filter the voice."""
+    raw_demod = demod_am(samples)
+    dc_free = remove_dc(raw_demod)
+    filtered = filter_audio(audio=dc_free, sample_rate=sample_rate)
+    return filtered
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,6 +53,22 @@ def parse_args() -> argparse.Namespace:
 
     # DONE
     return args
+
+
+def plot_it(samples: np.ndarray, sample_rate: float, center_freq: float, filename: str) -> None:
+    """Plot samples."""
+    # LOCAL VARIABLES
+    figure = None  # Figure holding all plots
+    axes = None    # One Axes per plot
+
+    # PLOT IT
+    figure, axes = plt.subplots(3, 1, figsize=(12, 10))
+    plot_power(axes[0], samples, sample_rate)
+    plot_spectrum(axes[1], samples, sample_rate, center_freq)
+    plot_spectrogram(axes[2], samples, sample_rate, center_freq)
+    figure.suptitle(Path(filename).name)
+    figure.tight_layout()
+    plt.show()
 
 
 def plot_power(axes: Axes, samples: np.ndarray, sample_rate: float) -> None:
@@ -158,8 +183,7 @@ def main():
     sample_rate = meta.get_sample_rate()                               # Samples per second
     center_freq = meta.get_center_freq()                               # RF frequency of 0 Hz, Hz
     samples = read_samples(filename)                                   # Complex baseband samples
-    figure = None                                                      # Figure holding all plots
-    axes = None                                                        # One Axes per plot
+    voice = extract_voice(samples)                                     # Real values per sample
 
     # SETUP
     if center_freq is None:
@@ -171,14 +195,9 @@ def main():
         print(f"SAMPLES: {len(samples)} ({len(samples) / sample_rate:.1f} s at "
               f"{sample_rate} S/s, centered on {center_freq / 1e6} MHz)")
 
-    # PLOT IT
-    figure, axes = plt.subplots(3, 1, figsize=(12, 10))
-    plot_power(axes[0], samples, sample_rate)
-    plot_spectrum(axes[1], samples, sample_rate, center_freq)
-    plot_spectrogram(axes[2], samples, sample_rate, center_freq)
-    figure.suptitle(Path(filename).name)
-    figure.tight_layout()
-    plt.show()
+    # INSPECT IT
+    plot_it(samples=samples, sample_rate=sample_rate, center_freq=center_freq, filename=filename)
+
 
 
 if __name__ == "__main__":
