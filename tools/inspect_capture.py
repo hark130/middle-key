@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_META_FILE_EXT
-from middle_key.dsp import power_db, power_to_db
+from middle_key.dsp import convert_samples_to_db, convert_power_to_db
 from middle_key.io import read_samples
 from middle_key.sigmfmetaparser import SigMFMetaParser
 
@@ -67,7 +67,7 @@ def plot_power(axes: Axes, samples: np.ndarray, sample_rate: float) -> None:
 
     # COMPUTE IT
     blocks = samples[:num_blocks * block_len].reshape(num_blocks, block_len)
-    peaks_db = power_db(np.max(np.abs(blocks), axis=1))
+    peaks_db = convert_samples_to_db(np.max(np.abs(blocks), axis=1))
     times = np.arange(num_blocks) * block_len / sample_rate
 
     # PLOT IT
@@ -99,7 +99,7 @@ def plot_spectrum(axes: Axes, samples: np.ndarray, sample_rate: float,
     psd = np.fft.fftshift(psd)
 
     # PLOT IT
-    axes.plot((center_freq + freqs) / 1e6, power_to_db(psd), linewidth=0.8)
+    axes.plot((center_freq + freqs) / 1e6, convert_power_to_db(psd), linewidth=0.8)
     axes.set_title("Averaged spectrum")
     axes.set_xlabel("Frequency (MHz)")
     axes.set_ylabel("PSD (dBFS/Hz)")
@@ -133,7 +133,7 @@ def plot_spectrogram(axes: Axes, samples: np.ndarray, sample_rate: float,
     freqs, times, sxx = signal.spectrogram(samples, fs=sample_rate, nperseg=nfft, noverlap=0,
                                            return_onesided=False)
     freqs = np.fft.fftshift(freqs)
-    sxx_db = power_to_db(np.fft.fftshift(sxx, axes=0))
+    sxx_db = convert_power_to_db(np.fft.fftshift(sxx, axes=0))
 
     # PLOT IT
     image = axes.imshow(sxx_db, aspect="auto", origin="lower",
