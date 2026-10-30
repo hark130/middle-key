@@ -10,6 +10,9 @@ AUDIO_CUTOFF_HZ: Final[float] = 3_000.0      # Airband voice is roughly 300-3000
 AUDIO_TRANSITION_HZ: Final[float] = 1_000.0  # Passband edge to stopband edge
 # DC blocker
 DC_BLOCK_POLE: Final[float] = 0.995  # DC blocker pole: cutoff = (1 - pole) * fs / (2 * pi)
+# Audio normalization
+NORMALIZE_PERCENTILE: Final[float] = 99.9  # Scale by this percentile of |audio|, not its peak
+NORMALIZE_TARGET: Final[float] = 0.8       # Where that percentile lands: ~-2 dBFS of headroom
 # FIR filter design
 HAMMING_TAPS_FACTOR: Final[float] = 3.3  # Hamming window: num taps ~= factor * fs / transition
 # Assumed file extensions
