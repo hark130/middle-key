@@ -7,7 +7,8 @@ from scipy import signal
 import numpy as np
 # Local Imports
 from middle_key.constants import (AUDIO_CUTOFF_HZ, AUDIO_TRANSITION_HZ, DC_BLOCK_POLE,
-                                  HAMMING_TAPS_FACTOR)
+                                  HAMMING_TAPS_FACTOR, NORMALIZE_PERCENTILE,
+                                  NORMALIZE_TARGET)
 from middle_key.demod import demod_am
 
 
@@ -101,6 +102,15 @@ def extract_audio(samples: np.ndarray, sample_rate: float) -> np.ndarray:
     return filtered
 
 
+def extract_normal_audio(samples: np.ndarray, sample_rate: float,
+                         percentile: float = NORMALIZE_PERCENTILE,
+                         target: float = NORMALIZE_TARGET) -> np.ndarray:
+    """Extract normalized audio from the samples."""
+    audio = extract_audio(samples=samples, sample_rate=sample_rate)
+    normal = normalize_audio(audio=audio, percentile=percentile, target=target)
+    return normal
+
+
 def filter_audio(audio: np.ndarray, sample_rate: float, cutoff_hz: float = AUDIO_CUTOFF_HZ,
                  transition_hz: float = AUDIO_TRANSITION_HZ) -> np.ndarray:
     """Low-pass filter audio to the voice band, removing hiss above it.
@@ -129,6 +139,48 @@ def filter_audio(audio: np.ndarray, sample_rate: float, cutoff_hz: float = AUDIO
 
     # DONE
     return filtered
+
+
+def normalize_audio(audio: np.ndarray, percentile: float = NORMALIZE_PERCENTILE,
+                    target: float = NORMALIZE_TARGET) -> np.ndarray:
+    """Scale audio by one constant gain so its loud parts land near target, then clip to +/-1.
+
+    The level is measured at a high percentile of |audio| instead of its peak, so a few loud
+    outliers (clicks, start-up transients) can't set the volume for everything else.  Samples
+    above that percentile end up above target and may be clipped at +/-1.  Relative levels are
+    unchanged: a quiet transmission stays quieter than a loud one.
+
+    Args:
+        audio: Real audio samples.
+        percentile: [OPTIONAL] The percentile (0-100) of |audio| to scale to target.
+        target: [OPTIONAL] The level, between 0 and 1, the percentile is scaled to.
+
+    Returns:
+        The scaled audio, within +/-1.  Empty or silent (all-zero) audio is returned unscaled.
+
+    Raises:
+        ValueError: percentile is outside 0-100 or target is outside (0, 1].
+    """
+    # LOCAL VARIABLES
+    level = 0.0         # Magnitude of audio at the given percentile
+    normalized = audio  # Return value
+
+    # INPUT VALIDATION
+    if not 0 <= percentile <= 100:
+        raise ValueError(f'The percentile must be between 0 and 100, not {percentile}')
+    if not 0 < target <= 1:
+        raise ValueError(f'The target must be greater than 0 and at most 1, not {target}')
+    if not np.all(np.isfinite(audio)):
+        raise ValueError('The "audio" argument contains NaN or infinite values')
+
+    # NORMALIZE IT
+    if audio.size > 0:
+        level = float(np.percentile(np.abs(audio), percentile))
+    if level > 0:
+        normalized = np.clip(audio * (target / level), -1.0, 1.0)
+
+    # DONE
+    return normalized
 
 
 def remove_dc(signal_in: np.ndarray, pole: float = DC_BLOCK_POLE) -> np.ndarray:
