@@ -1,0 +1,34 @@
+# To install in editable mode:
+#   pip install -e ".[tools,test]"
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "middle-key"
+version = "0.1.0"
+description = "MIKE (Middle Key): programmatically capture airband traffic"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Joseph Harkleroad", email = "harkleroad.joseph@gmail.com" }]
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+    "scipy",
+]
+
+[project.optional-dependencies]
+tools = [
+    "matplotlib",  # plotting in tools/; not needed by MIKE itself
+]
+test = [
+    "pytest",
+]
+
+[project.urls]
+Repository = "https://github.com/hark130/middle-key"
+
+[tool.setuptools.packages.find]
+where = ["src"]
