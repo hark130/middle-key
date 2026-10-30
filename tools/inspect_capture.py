@@ -12,14 +12,15 @@ import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_META_FILE_EXT
 from middle_key.demod import demod_am
-from middle_key.dsp import convert_samples_to_db, convert_power_to_db, extract_audio
-from middle_key.io import read_samples
+from middle_key.dsp import (convert_samples_to_db, convert_power_to_db, extract_normal_audio)
+from middle_key.io import read_samples, write_wav
 from middle_key.sigmfmetaparser import SigMFMetaParser
 
 
 # CLI Arguments
 CLI_ARG_CAPTURE: Final[str] = 'capture'  # Capture filename
 CLI_ARG_DEBUG: Final[str] = 'debug'      # Debug logging
+CLI_ARG_WAV: Final[str] = 'wav'          # Output WAV filename
 # Plot settings
 PLOT_MAX_POINTS: Final[int] = 4000   # Max points in the power-vs-time plot (screen resolution)
 PLOT_NFFT: Final[int] = 4096         # FFT size for the spectrum: 48 kS/s / 4096 = ~12 Hz bins
@@ -37,8 +38,11 @@ def parse_args() -> argparse.Namespace:
     # DEFINE THEM
     parser.add_argument(f"-{CLI_ARG_CAPTURE[0]}", f"--{CLI_ARG_CAPTURE}", required=True,
                         action='store', help="Base filename for the SigMF data and meta file")
-    parser.add_argument(f"--{CLI_ARG_DEBUG}", action="store_true", help="Verbose logging",
-                        required=False)
+    parser.add_argument(f"-{CLI_ARG_DEBUG[0]}", f"--{CLI_ARG_DEBUG}", action="store_true",
+                        help="Verbose logging", required=False)
+    parser.add_argument(f"-{CLI_ARG_WAV[0]}", f"--{CLI_ARG_WAV}", required=False, default=None,
+                        action='store', metavar='WAV_FILE',
+                        help="Also demodulate the capture and write the audio to this WAV file")
 
     # PARSE THEM
     args = parser.parse_args()
@@ -169,13 +173,14 @@ def main():
     # LOCAL VARIABLES
     args = parse_args()                                                # Parsed CLI args
     debug = getattr(args, CLI_ARG_DEBUG)                               # Debug mode?
+    wav_file = getattr(args, CLI_ARG_WAV)                              # Optional output file
     filename = getattr(args, CLI_ARG_CAPTURE)                          # Capture filename
     meta_path = Path(filename).with_suffix('.' + SIGMF_META_FILE_EXT)  # SigMF metadata filename
     meta = SigMFMetaParser(meta_filename=meta_path)                    # SigMF metadata
     sample_rate = meta.get_sample_rate()                               # Samples per second
     center_freq = meta.get_center_freq()                               # RF frequency of 0 Hz, Hz
     samples = read_samples(filename)                                   # Complex baseband samples
-    voice = extract_audio(samples, sample_rate)                        # Real values per sample
+    audio = None                                                       # Real values per sample
 
     # SETUP
     if center_freq is None:
@@ -188,6 +193,11 @@ def main():
               f"{sample_rate} S/s, centered on {center_freq / 1e6} MHz)")
 
     # INSPECT IT
+    if wav_file is not None:
+        audio = extract_normal_audio(samples, sample_rate)
+        write_wav(filename=wav_file, audio=audio, sample_rate=sample_rate)
+        if debug:
+            print(f"WAV: {wav_filename}")
     plot_it(samples=samples, sample_rate=sample_rate, center_freq=center_freq, filename=filename)
 
 
