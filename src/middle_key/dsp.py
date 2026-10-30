@@ -9,7 +9,6 @@ import numpy as np
 from middle_key.constants import (AUDIO_CUTOFF_HZ, AUDIO_TRANSITION_HZ, DC_BLOCK_POLE,
                                   HAMMING_TAPS_FACTOR, NORMALIZE_PERCENTILE,
                                   NORMALIZE_TARGET)
-from middle_key.demod import demod_am
 
 
 def convert_samples_to_db(samples: np.ndarray) -> np.ndarray:
@@ -94,23 +93,6 @@ def design_lowpass(sample_rate: float, cutoff_hz: float, transition_hz: float) -
     return taps
 
 
-def extract_audio(samples: np.ndarray, sample_rate: float) -> np.ndarray:
-    """Demodulate analog AM, remove the DC, and filter the voice."""
-    raw_demod = demod_am(samples)
-    dc_free = remove_dc(raw_demod)
-    filtered = filter_audio(audio=dc_free, sample_rate=sample_rate)
-    return filtered
-
-
-def extract_normal_audio(samples: np.ndarray, sample_rate: float,
-                         percentile: float = NORMALIZE_PERCENTILE,
-                         target: float = NORMALIZE_TARGET) -> np.ndarray:
-    """Extract normalized audio from the samples."""
-    audio = extract_audio(samples=samples, sample_rate=sample_rate)
-    normal = normalize_audio(audio=audio, percentile=percentile, target=target)
-    return normal
-
-
 def filter_audio(audio: np.ndarray, sample_rate: float, cutoff_hz: float = AUDIO_CUTOFF_HZ,
                  transition_hz: float = AUDIO_TRANSITION_HZ) -> np.ndarray:
     """Low-pass filter audio to the voice band, removing hiss above it.
@@ -159,7 +141,8 @@ def normalize_audio(audio: np.ndarray, percentile: float = NORMALIZE_PERCENTILE,
         The scaled audio, within +/-1.  Empty or silent (all-zero) audio is returned unscaled.
 
     Raises:
-        ValueError: percentile is outside 0-100 or target is outside (0, 1].
+        ValueError: percentile is outside 0-100, target is outside (0, 1], or audio contains
+            NaN or infinite values.
     """
     # LOCAL VARIABLES
     level = 0.0         # Magnitude of audio at the given percentile

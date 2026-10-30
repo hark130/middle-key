@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_META_FILE_EXT
-from middle_key.dsp import (convert_samples_to_db, convert_power_to_db, extract_normal_audio)
+from middle_key.demod import extract_normal_audio
+from middle_key.dsp import (convert_samples_to_db, convert_power_to_db)
 from middle_key.io import read_samples, write_wav
 from middle_key.sigmfmetaparser import SigMFMetaParser
 
@@ -183,7 +184,7 @@ def main():
 
     # SETUP
     if center_freq is None:
-        center_freq = 0.0
+        print(f"The {meta_path} is missing a center frequency!")
 
     # SUMMARIZE IT
     if debug:
