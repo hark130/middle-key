@@ -59,7 +59,7 @@ check_lint_dirs
 # LINTER COMMANDS
 # LINT_DIRS is intentionally unquoted below so each directory becomes its own argument
 # 1. Pycodestyle
-run_linter "Pycodestyle" python3 -m pycodestyle $LINT_DIRS --max-line-length=100
+run_linter "Pycodestyle" python3 -m pycodestyle $LINT_DIRS
 # 2. Pylint
 run_linter "Pylint" python3 -m pylint $LINT_DIRS
 
