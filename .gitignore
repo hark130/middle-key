@@ -1,3 +1,9 @@
+# MIKE
+# IQ captures and generated audio (large; never(?) commit)
+data/*
+!data/.placeholder
+
+# PYTHON
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
