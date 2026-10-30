@@ -2,7 +2,9 @@
 
 # Standard Imports
 from pathlib import Path
+from typing import Tuple
 # Third Party Imports
+from numpy.typing import DTypeLike
 import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_DATA_FILE_EXT, SIGMF_META_FILE_EXT

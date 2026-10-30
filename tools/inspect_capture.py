@@ -1,6 +1,7 @@
 """Inspect a SigMF capture."""
 
 # Standard Imports
+from typing import Final
 import argparse
 # Third Party Imports
 # Local Imports
@@ -23,7 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(f"-{CLI_ARG_CAPTURE[0]}", f"--{CLI_ARG_CAPTURE}", required=True,
                         action='store', help="Base filename for the SigMF data and meta file")
     parser.add_argument(f"--{CLI_ARG_DEBUG}", action="store_true", help="Verbose logging",
-    	                required=False)
+                        required=False)
 
     # PARSE THEM
     args = parser.parse_args()
@@ -33,16 +34,14 @@ def parse_args() -> argparse.Namespace:
 
 
 def main():
-	"""do_it()."""
-	args = parse_args()                        # Parsed CLI args
-	debug = getattr(args, CLI_ARG_DEBUG)       # Debug mode?
-	filename = getattr(args, CLI_ARG_CAPTURE)  # Capture filename
-	print(f"FILENAME: {filename}")  # DEBUGGING
-	samples = read_samples(filename)           # Read samples
-	print(f"SAMPLES: {samples}")  # DEBUGGING
-
-
+    """do_it()."""
+    args = parse_args()                        # Parsed CLI args
+    debug = getattr(args, CLI_ARG_DEBUG)       # Debug mode?
+    filename = getattr(args, CLI_ARG_CAPTURE)  # Capture filename
+    print(f"FILENAME: {filename}")  # DEBUGGING
+    samples = read_samples(filename)           # Read samples
+    print(f"SAMPLES: {samples}")  # DEBUGGING
 
 
 if __name__ == "__main__":
-	main()
+    main()

@@ -2,7 +2,7 @@
 
 # Standard Imports
 from pathlib import Path
-from typing import Final
+from typing import Any, Final
 # Third Party Imports
 # Local Imports
 
