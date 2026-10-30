@@ -5,11 +5,13 @@ from pathlib import Path
 from typing import Tuple
 # Third Party Imports
 from numpy.typing import DTypeLike
+from scipy.io import wavfile
 import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_DATA_FILE_EXT, SIGMF_META_FILE_EXT
 from middle_key.sigmfmetaparser import SigMFMetaParser
-from middle_key.validation import validate_bool, validate_path, validate_string
+from middle_key.validation import (validate_bool, validate_path, validate_string,
+                                   validate_type)
 
 
 def read_samples(filename: str | Path) -> np.ndarray:
@@ -34,6 +36,56 @@ def read_samples(filename: str | Path) -> np.ndarray:
 
     # DONE
     return samples
+
+
+def write_wav(filename: str | Path, audio: np.ndarray, sample_rate: float) -> Path:
+    """Write real audio samples to a 16-bit PCM WAV file.
+
+    Samples are expected to be within +/-1 (see dsp.normalize_audio()); anything outside that
+    range is clipped.  16-bit PCM is used because every audio player supports it.
+
+    Args:
+        filename: The relative or absolute path of the WAV file to write.  An existing file is
+            overwritten.  The parent directory must already exist.
+        audio: Real (not complex) audio samples, one channel.
+        sample_rate: The audio sample rate in samples per second.
+
+    Returns:
+        The path of the file written, as a Path object.
+
+    Raises:
+        FileNotFoundError: The parent directory of filename does not exist.
+        TypeError: Bad data type.
+        ValueError: audio is complex or not one-dimensional, or sample_rate is not positive.
+    """
+    # LOCAL VARIABLES
+    file_path = filename                 # The filename argument as a Path object
+    full_scale = np.iinfo(np.int16).max  # 32767: the largest 16-bit sample value
+    pcm_samples = None                   # audio converted to 16-bit integers
+
+    # INPUT VALIDATION
+    # filename
+    if isinstance(filename, str):
+        file_path = Path(filename)
+    validate_path(file_path, 'filename', must_exist=False)
+    validate_path(file_path.absolute().parent, 'filename parent directory', must_exist=True)
+    # audio
+    validate_type(audio, 'audio', np.ndarray)
+    if np.iscomplexobj(audio) or audio.ndim != 1:
+        raise ValueError(f'The "audio" argument must be a one-dimensional array of real samples, '
+                         f'not {audio.ndim}-dimensional {audio.dtype}')
+    # sample_rate
+    if sample_rate <= 0:
+        raise ValueError(f'The "sample_rate" argument must be positive, not {sample_rate}')
+
+    # CONVERT IT
+    pcm_samples = np.round(np.clip(audio, -1.0, 1.0) * full_scale).astype(np.int16)
+
+    # WRITE IT
+    wavfile.write(file_path, int(round(sample_rate)), pcm_samples)
+
+    # DONE
+    return file_path
 
 
 def _read_raw_samples(filename: Path, sample_dtype: np.dtype) -> np.ndarray:
