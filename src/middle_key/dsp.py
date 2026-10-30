@@ -1,12 +1,15 @@
 """Digital signal processing helpers."""
 
 # Standard Imports
+import math
 # Third Party Imports
+from scipy import signal
 import numpy as np
-import scipy.signal
 # Local Imports
 from middle_key.constants import (AUDIO_CUTOFF_HZ, AUDIO_TRANSITION_HZ, DC_BLOCK_POLE,
                                   HAMMING_TAPS_FACTOR)
+from middle_key.demod import demod_am
+
 
 def convert_samples_to_db(samples: np.ndarray) -> np.ndarray:
     """Convert samples to instantaneous power in dB relative to full scale (dBFS).
@@ -88,6 +91,14 @@ def design_lowpass(sample_rate: float, cutoff_hz: float, transition_hz: float) -
 
     # DONE
     return taps
+
+
+def extract_audio(samples: np.ndarray, sample_rate: float) -> np.ndarray:
+    """Demodulate analog AM, remove the DC, and filter the voice."""
+    raw_demod = demod_am(samples)
+    dc_free = remove_dc(raw_demod)
+    filtered = filter_audio(audio=dc_free, sample_rate=sample_rate)
+    return filtered
 
 
 def filter_audio(audio: np.ndarray, sample_rate: float, cutoff_hz: float = AUDIO_CUTOFF_HZ,
