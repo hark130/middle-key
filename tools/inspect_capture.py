@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 # Local Imports
 from middle_key.constants import SIGMF_META_FILE_EXT
-from middle_key.demod import demod_am
 from middle_key.dsp import (convert_samples_to_db, convert_power_to_db, extract_normal_audio)
 from middle_key.io import read_samples, write_wav
 from middle_key.sigmfmetaparser import SigMFMetaParser
@@ -197,7 +196,7 @@ def main():
         audio = extract_normal_audio(samples, sample_rate)
         write_wav(filename=wav_file, audio=audio, sample_rate=sample_rate)
         if debug:
-            print(f"WAV: {wav_filename}")
+            print(f"WAV: {wav_file}")
     plot_it(samples=samples, sample_rate=sample_rate, center_freq=center_freq, filename=filename)
 
 
