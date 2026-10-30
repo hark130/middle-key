@@ -1,5 +1,5 @@
 # To install in editable mode:
-#   pip install -e ".[tools,test]"
+#   pip install -e ".[tools,test,lint]"
 
 [build-system]
 requires = ["setuptools>=77"]
@@ -21,11 +21,15 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-tools = [
-    "matplotlib",  # plotting in tools/; not needed by MIKE itself
+lint = [
+    "pycodestyle",  # settings: setup.cfg
+    "pylint",       # settings: [tool.pylint.*] below
 ]
 test = [
     "pytest",
+]
+tools = [
+    "matplotlib",  # plotting in tools/; not needed by MIKE itself
 ]
 
 [project.urls]
@@ -33,3 +37,14 @@ Repository = "https://github.com/hark130/middle-key"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+# PYLINT SETTINGS
+# scripts/run_linters.sh decides what gets linted; these settings decide how.
+[tool.pylint.main]
+recursive = true  # lint every .py file under the directories it's given
+
+[tool.pylint.format]
+max-line-length = 100
+
+[tool.pylint.reports]
+score = false
