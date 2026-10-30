@@ -3,6 +3,10 @@
 data/*
 !data/.placeholder
 
+# GRC regenerates these from the .grc files
+flowgraphs/**/*.py
+
+
 # PYTHON
 # Byte-compiled / optimized / DLL files
 __pycache__/
