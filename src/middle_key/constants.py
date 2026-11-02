@@ -9,6 +9,10 @@ import os
 # Audio low-pass filter
 AUDIO_CUTOFF_HZ: Final[float] = 3_000.0      # Airband voice is roughly 300-3000 Hz
 AUDIO_TRANSITION_HZ: Final[float] = 1_000.0  # Passband edge to stopband edge
+# Channelizer
+CHANNEL_CUTOFF_HZ: Final[float] = 5_000.0       # Voice (~3 kHz) plus margin for frequency error
+CHANNEL_TARGET_RATE: Final[float] = 48_000.0    # Aim for this channel sample rate, S/s
+CHANNEL_TRANSITION_HZ: Final[float] = 10_000.0  # Stopband edge at 15 kHz, under 48 kS/s / 2
 # CLI arguments
 CLI_DEBUG: Final[str] = "debug"            # Debug mode
 CLI_DEBUG_DEFAULT: Final[bool] = False     # Default debug mode
