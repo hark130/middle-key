@@ -1,11 +1,17 @@
-"""Defines the RadioSettings dataclass."""
+"""Defines the RadioType enum and the RadioSettings dataclass."""
 
 # Standard Imports
 from dataclasses import dataclass
+from enum import Enum
 # Third Party Imports
 # Local Imports
-from middle_key.constants import CLI_GAIN_DEFAULT
-from middle_key.radio.constants import RADIO_ANTENNA, RADIO_SAMPLE_RATE
+from middle_key.radio.constants import (RADIO_ANTENNA, RADIO_DEVICE_ARGS, RADIO_GAIN_DB,
+                                        RADIO_SAMPLE_RATE)
+
+
+class RadioType(Enum):
+    """The SDR families MIKE supports."""
+    USRP = "usrp"  # Ettus USRP (B200 series, e.g., B206mini) through UHD
 
 
 @dataclass(frozen=True)
@@ -19,10 +25,14 @@ class RadioSettings:
         gain: [OPTIONAL] RF gain in dB.  Automatic gain control is always turned off, so levels
             stay comparable for the squelch.
         antenna: [OPTIONAL] The receive port, or None to keep the device's default.
-        device_args: [OPTIONAL] The SoapySDR device to open, e.g., 'driver=uhd'.
+        radio_type: [OPTIONAL] Which SDR family to use (see create_sdr()).
+        device_args: [OPTIONAL] Selects a specific device, in the radio's own format
+            (e.g., "type=b200" or "serial=31F5A6B" for UHD).  "" uses the first device found.
     """
 
-    center_freq: float                       # RF frequency to tune to, Hz
-    sample_rate: float = RADIO_SAMPLE_RATE   # Samples per second
-    gain: float = CLI_GAIN_DEFAULT           # RF gain, dB
-    antenna: str | None = RADIO_ANTENNA      # Receive port, or None for the default
+    center_freq: float                      # RF frequency to tune to, Hz
+    sample_rate: float = RADIO_SAMPLE_RATE  # Samples per second
+    gain: float = RADIO_GAIN_DB             # RF gain, dB
+    antenna: str | None = RADIO_ANTENNA     # Receive port, or None for the default
+    radio_type: RadioType = RadioType.USRP  # SDR family
+    device_args: str = RADIO_DEVICE_ARGS    # Device selector, or "" for the first found
