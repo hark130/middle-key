@@ -1,7 +1,6 @@
 """Parse the CLI arguments."""
 
 # Standard Imports
-from typing import Final
 import argparse
 import os
 # Third Party Imports

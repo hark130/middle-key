@@ -4,7 +4,8 @@
 from dataclasses import dataclass
 # Third Party Imports
 # Local Imports
-
+from middle_key.constants import CLI_GAIN_DEFAULT
+from middle_key.radio.constants import RADIO_ANTENNA, RADIO_SAMPLE_RATE
 
 
 @dataclass(frozen=True)
@@ -23,5 +24,5 @@ class RadioSettings:
 
     center_freq: float                       # RF frequency to tune to, Hz
     sample_rate: float = RADIO_SAMPLE_RATE   # Samples per second
-    gain: float = RADIO_GAIN_DB              # RF gain, dB
+    gain: float = CLI_GAIN_DEFAULT           # RF gain, dB
     antenna: str | None = RADIO_ANTENNA      # Receive port, or None for the default
