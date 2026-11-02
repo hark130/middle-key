@@ -6,6 +6,7 @@ import logging
 # Third Party Imports
 import numpy as np
 # Local Imports
+from middle_key.channelizer import Channelizer
 from middle_key.constants import CLI_DEBUG, CLI_FREQ, CLI_GAIN, EXIT_FAILURE, EXIT_SUCCESS
 from middle_key.dsp import convert_power_to_db
 from middle_key.parse_args import parse_args
@@ -25,7 +26,9 @@ def main() -> int:
     debug = getattr(args, CLI_DEBUG)        # Debug mode?
     channel_freq = getattr(args, CLI_FREQ)  # Channel to listen to, Hz
     settings = None                         # Requested radio configuration
-    power_db = 0.0                          # Average power of a chunk, dBFS
+    channelizer = None                      # Selects the channel from the SDR's wideband IQ
+    channel = None                          # One chunk's worth of channel samples
+    power_db = 0.0                          # Average power of the channel chunk, dBFS
 
     # SETUP
     logging.basicConfig(level=logging.DEBUG if debug else logging.WARNING,
@@ -40,9 +43,14 @@ def main() -> int:
                   f'{sdr.actual_settings.center_freq / 1e6:.3f} MHz at '
                   f'{sdr.actual_settings.sample_rate:.0f} S/s, '
                   f'gain {sdr.actual_settings.gain:.1f} dB (Ctrl+C to stop)')
+            channelizer = Channelizer(sample_rate=sdr.actual_settings.sample_rate,
+                                      offset_hz=channel_freq - sdr.actual_settings.center_freq)
+            print(f'Channel: {channelizer.offset_hz / 1e3:+.3f} kHz from center, decimated by '
+                  f'{channelizer.decimation} to {channelizer.channel_rate:.0f} S/s')
             for chunk in sdr.stream_samples():
-                power_db = float(convert_power_to_db(np.mean(np.abs(chunk)**2)))
-                print(f'\rPower: {power_db:7.1f} dBFS', end='', flush=True)
+                channel = channelizer.process_chunk(chunk)
+                power_db = float(convert_power_to_db(np.mean(np.abs(channel)**2)))
+                print(f'\rChannel power: {power_db:7.1f} dBFS', end='', flush=True)
     except KeyboardInterrupt:
         print('\nStopped')
     except (ImportError, OSError, RuntimeError, TypeError, ValueError) as err:
