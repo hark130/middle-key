@@ -18,14 +18,14 @@ def parse_args() -> argparse.Namespace:
     out_dir = ''  # CLI output directory
 
     # DEFINE THEM
-    parser.add_argument(f"-{CLI_DEBUG[0]}", f"--{CLI_DEBUG}", type=bool, default=False,
-                        required=False, help="Verbose logging")
+    parser.add_argument(f"-{CLI_DEBUG[0]}", f"--{CLI_DEBUG}", default=False,
+                        required=False, action="store_true", help="Verbose logging")
     parser.add_argument(f"-{CLI_FREQ[0]}", f"--{CLI_FREQ}", type=float, required=True,
                         help="Channel frequency in Hz")
     parser.add_argument(f"-{CLI_GAIN[0]}", f"--{CLI_GAIN}", type=float, default=CLI_GAIN_DEFAULT,
                         required=False, help="RF gain in dB")
     parser.add_argument(f"-{CLI_OUT[0]}", f"--{CLI_OUT}", type=str, default=CLI_OUT_DEFAULT,
-                        required=True, help="Output directory for wav files")
+                        required=False, help="Output directory for wav files")
 
     # PARSE AND VALIDATE THEM
     args = parser.parse_args()
