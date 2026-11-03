@@ -18,7 +18,8 @@ from middle_key.radio.settings import RadioSettings, RadioType
 # Where each RadioType's Sdr subclass lives: (module, class name).  Each module is only imported
 # when its radio type is used, so e.g. the USRP's uhd package isn't needed to run a HackRF.
 _SDR_CLASSES: Final[dict[RadioType, tuple[str, str]]] = {
-    RadioType.USRP: ('middle_key.radio.usrp_sdr', 'UsrpSdr'),
+    RadioType.RTLSDR: ("middle_key.radio.rtl_sdr", "RtlSdr"),
+    RadioType.USRP: ("middle_key.radio.usrp_sdr", "UsrpSdr"),
 }
 
 
