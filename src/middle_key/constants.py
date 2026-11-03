@@ -9,6 +9,16 @@ import os
 # Audio low-pass filter
 AUDIO_CUTOFF_HZ: Final[float] = 3_000.0      # Airband voice is roughly 300-3000 Hz
 AUDIO_TRANSITION_HZ: Final[float] = 1_000.0  # Passband edge to stopband edge
+# Burst detection (squelch) and recording
+BURST_CLOSE_DB: Final[float] = 6.0           # End a burst when power drops below floor + this
+BURST_CONFIRM_S: Final[float] = 0.25         # Power must stay up this long to count as a burst
+BURST_FLOOR_PERCENTILE: Final[float] = 20.0  # Noise floor = this percentile of recent frame powers
+BURST_FLOOR_WINDOW_S: Final[float] = 30.0    # Seconds of frame powers the noise floor looks at
+BURST_FRAME_S: Final[float] = 0.010          # Measure power over frames this long: 10 ms
+BURST_HANG_S: Final[float] = 0.3             # Hang time: stay open through dips shorter than this
+BURST_OPEN_DB: Final[float] = 10.0           # Start a burst when power is this far above the floor
+BURST_PAD_S: Final[float] = 0.15             # Keep this much extra audio before and after a burst
+BURST_WARMUP_S: Final[float] = 2.0           # Measure the noise floor this long before detecting
 # Channelizer
 CHANNEL_CUTOFF_HZ: Final[float] = 5_000.0       # Voice (~3 kHz) plus margin for frequency error
 CHANNEL_TARGET_RATE: Final[float] = 48_000.0    # Aim for this channel sample rate, S/s
