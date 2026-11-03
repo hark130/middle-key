@@ -29,6 +29,8 @@ CLI_FREQ: Final[str] = "freq"              # Channel frequency in Hz
 CLI_GAIN: Final[str] = "gain"              # RF gain in dB
 CLI_OUT: Final[str] = "out"                # Directory to save output wav files
 CLI_OUT_DEFAULT: Final[str] = os.getcwd()  # Default output to the current working directory
+CLI_PPM: Final[str] = "ppm"                # Radio oscillator correction, ppm
+CLI_RADIO: Final[str] = "radio"            # SDR family (a RadioType value)
 # DC blocker
 DC_BLOCK_POLE: Final[float] = 0.995  # DC blocker pole: cutoff = (1 - pole) * fs / (2 * pi)
 # Exit codes
