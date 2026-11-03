@@ -60,7 +60,7 @@ def print_meter(channel: np.ndarray, detector: BurstDetector) -> None:
     if detector.floor_db is not None:
         floor = f"floor {detector.floor_db:6.1f} dBFS ({power_db - detector.floor_db:+5.1f} dB)"
     print(f"\rChannel power {power_db:6.1f} dBFS, {floor}  "
-          f"[{"OPEN  " if detector.is_open else "closed"}]", end="", flush=True)
+          f'[{"OPEN  " if detector.is_open else "closed"}]', end="", flush=True)
 
 
 def save_burst(burst: Burst, out_dir: Path) -> Path:
