@@ -1,5 +1,5 @@
 # To install in editable mode:
-#   pip install -e ".[tools,test,lint]"
+#   pip install -e ".[rtlsdr,tools,test,lint]"
 
 [build-system]
 requires = ["setuptools>=77"]
@@ -24,6 +24,9 @@ dependencies = [
 lint = [
     "pycodestyle",  # settings: setup.cfg
     "pylint",       # settings: [tool.pylint.*] below
+]
+rtlsdr = [
+    "pyrtlsdr",  # RTL-SDR support; also needs librtlsdr from your OS
 ]
 test = [
     "pytest",
