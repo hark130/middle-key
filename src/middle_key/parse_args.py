@@ -5,8 +5,8 @@ import argparse
 import os
 # Third Party Imports
 # Local Imports
-from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_GAIN_DEFAULT, CLI_OUT,
-                                  CLI_OUT_DEFAULT)
+from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_OUT, CLI_OUT_DEFAULT)
+from middle_key.radio.constants import RADIO_GAIN_DB
 
 
 def parse_args() -> argparse.Namespace:
@@ -22,7 +22,7 @@ def parse_args() -> argparse.Namespace:
                         required=False, action="store_true", help="Verbose logging")
     parser.add_argument(f"-{CLI_FREQ[0]}", f"--{CLI_FREQ}", type=float, required=True,
                         help="Channel frequency in Hz")
-    parser.add_argument(f"-{CLI_GAIN[0]}", f"--{CLI_GAIN}", type=float, default=CLI_GAIN_DEFAULT,
+    parser.add_argument(f"-{CLI_GAIN[0]}", f"--{CLI_GAIN}", type=float, default=RADIO_GAIN_DB,
                         required=False, help="RF gain in dB")
     parser.add_argument(f"-{CLI_OUT[0]}", f"--{CLI_OUT}", type=str, default=CLI_OUT_DEFAULT,
                         required=False, help="Output directory for wav files")

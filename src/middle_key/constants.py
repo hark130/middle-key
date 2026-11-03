@@ -25,10 +25,8 @@ CHANNEL_TARGET_RATE: Final[float] = 48_000.0    # Aim for this channel sample ra
 CHANNEL_TRANSITION_HZ: Final[float] = 10_000.0  # Stopband edge at 15 kHz, under 48 kS/s / 2
 # CLI arguments
 CLI_DEBUG: Final[str] = "debug"            # Debug mode
-CLI_DEBUG_DEFAULT: Final[bool] = False     # Default debug mode
 CLI_FREQ: Final[str] = "freq"              # Channel frequency in Hz
 CLI_GAIN: Final[str] = "gain"              # RF gain in dB
-CLI_GAIN_DEFAULT: Final[float] = 40.0      # Default gain value
 CLI_OUT: Final[str] = "out"                # Directory to save output wav files
 CLI_OUT_DEFAULT: Final[str] = os.getcwd()  # Default output to the current working directory
 # DC blocker
