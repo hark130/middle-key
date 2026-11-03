@@ -5,15 +5,12 @@
 from pathlib import Path
 import logging
 # Third Party Imports
-import numpy as np
 # Local Imports
-from middle_key.burst_detector import BurstDetector
-from middle_key.burst_recorder import Burst, BurstRecorder
-from middle_key.channelizer import Channelizer
+from middle_key.burst_recorder import Burst
+from middle_key.channel_monitor import ChannelMonitor
 from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_OUT, EXIT_FAILURE,
                                   EXIT_SUCCESS)
 from middle_key.demod import extract_normal_audio
-from middle_key.dsp import convert_power_to_db
 from middle_key.io import write_wav
 from middle_key.parse_args import parse_args
 from middle_key.radio import RadioSettings, create_sdr
@@ -45,22 +42,23 @@ def build_burst_filename(burst: Burst) -> str:
     return filename
 
 
-def print_meter(channel: np.ndarray, detector: BurstDetector) -> None:
-    """Overwrite the current console line with the channel's power and the squelch status.
+def print_meter(monitor: ChannelMonitor) -> None:
+    """Overwrite the current console line with a channel's power and squelch status.
 
     Args:
-        channel: The latest channel chunk.
-        detector: The channel's BurstDetector, for its noise floor and open/closed state.
+        monitor: The channel's ChannelMonitor, after at least one process_chunk() call.
     """
     # LOCAL VARIABLES
-    power_db = float(convert_power_to_db(np.mean(np.abs(channel)**2)))  # Chunk power, dBFS
-    floor = "warming up"                                                 # Noise floor text
+    detector = monitor.detector                          # Squelch status source
+    status = "OPEN  " if detector.is_open else "closed"  # Squelch state label
+    floor = "warming up"                                 # Noise floor text
 
     # PRINT IT
     if detector.floor_db is not None:
-        floor = f"floor {detector.floor_db:6.1f} dBFS ({power_db - detector.floor_db:+5.1f} dB)"
-    print(f"\rChannel power {power_db:6.1f} dBFS, {floor}  "
-          f'[{"OPEN  " if detector.is_open else "closed"}]', end="", flush=True)
+        floor = (f"floor {detector.floor_db:6.1f} dBFS "
+                 f"({monitor.power_db - detector.floor_db:+5.1f} dB)")
+    print(f"\rChannel power {monitor.power_db:6.1f} dBFS, {floor}  [{status}]", end="",
+          flush=True)
 
 
 def save_burst(burst: Burst, out_dir: Path) -> Path:
@@ -96,11 +94,7 @@ def main() -> int:
     debug = getattr(args, CLI_DEBUG)        # Debug mode?
     channel_freq = getattr(args, CLI_FREQ)  # Channel to listen to, Hz
     out_dir = Path(getattr(args, CLI_OUT))  # Where to save the WAV files
-    channelizer = None                      # Selects the channel from the SDR's wideband IQ
-    detector = None                         # Decides when transmissions start and end
-    recorder = None                         # Keeps samples; returns complete transmissions
-    channel = None                          # One chunk's worth of channel samples
-    events = None                           # The detector's decisions for one chunk
+    monitor = None                          # Channel pipeline: complete transmissions out
     wav_path = None                         # Where the latest burst was saved
 
     # SETUP
@@ -115,23 +109,17 @@ def main() -> int:
                   f"{sdr.actual_settings.center_freq / 1e6:.3f} MHz at "
                   f"{sdr.actual_settings.sample_rate:.0f} S/s, "
                   f"gain {sdr.actual_settings.gain:.1f} dB (Ctrl+C to stop)")
-            channelizer = Channelizer(sample_rate=sdr.actual_settings.sample_rate,
-                                      offset_hz=channel_freq - sdr.actual_settings.center_freq)
-            detector = BurstDetector(channel_rate=channelizer.channel_rate)
-            recorder = BurstRecorder(channel_rate=channelizer.channel_rate,
-                                     channel_freq=channel_freq)
-            print(f"Channel: {channelizer.offset_hz / 1e3:+.3f} kHz from center, decimated by "
-                  f"{channelizer.decimation} to {channelizer.channel_rate:.0f} S/s.  "
-                  f"Saving transmissions to {out_dir}")
+            monitor = ChannelMonitor(channel_freq=channel_freq, sdr_settings=sdr.actual_settings)
+            print(f"Channel: {monitor.channelizer.offset_hz / 1e3:+.3f} kHz from center, "
+                  f"decimated by {monitor.channelizer.decimation} to "
+                  f"{monitor.channelizer.channel_rate:.0f} S/s.  Saving transmissions to {out_dir}")
             for chunk in sdr.stream_samples():
-                channel = channelizer.process_chunk(chunk)
-                events = detector.process_chunk(channel)
-                for burst in recorder.process_chunk(channel, events):
+                for burst in monitor.process_chunk(chunk):
                     wav_path = save_burst(burst, out_dir)
                     print(f"\r{burst.start_time:%H:%M:%S}Z  {burst.channel_freq / 1e6:.3f} MHz  "
                           f"{burst.calculate_duration():5.1f} s  -> {wav_path}" + " " * 10)
                 if debug:
-                    print_meter(channel, detector)
+                    print_meter(monitor)
     except KeyboardInterrupt:
         print("\nStopped (a transmission in progress, if any, was not saved)")
     except (ImportError, OSError, RuntimeError, TypeError, ValueError) as err:
