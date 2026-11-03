@@ -92,11 +92,11 @@ class UsrpSdr(Sdr):
         # RECEIVE IT
         num_received = self._streamer.recv(self._recv_buffer, self._metadata, RADIO_TIMEOUT_S)
         if self._metadata.error_code == error_codes.overflow:
-            logging.warning('USRP overflow: samples were dropped')
+            logging.warning("\nUSRP overflow: samples were dropped")
         elif self._metadata.error_code == error_codes.timeout:
-            logging.warning('USRP timeout: no samples for %.1f s', RADIO_TIMEOUT_S)
+            logging.warning("\nUSRP timeout: no samples for %.1f s", RADIO_TIMEOUT_S)
         elif self._metadata.error_code != error_codes.none:
-            raise RuntimeError(f'USRP receive failed: {self._metadata.strerror()}')
+            raise RuntimeError(f"\nUSRP receive failed: {self._metadata.strerror()}")
 
         # DONE
         return self._recv_buffer[0, :num_received]
@@ -133,12 +133,12 @@ class UsrpSdr(Sdr):
         is_locked = False                                     # Has the LO locked?
 
         # WAIT FOR IT
-        if 'lo_locked' in self._usrp.get_rx_sensor_names(RADIO_CHANNEL):
+        if "lo_locked" in self._usrp.get_rx_sensor_names(RADIO_CHANNEL):
             while not is_locked and time.monotonic() < deadline:
-                is_locked = self._usrp.get_rx_sensor('lo_locked', RADIO_CHANNEL).to_bool()
+                is_locked = self._usrp.get_rx_sensor("lo_locked", RADIO_CHANNEL).to_bool()
                 if not is_locked:
                     time.sleep(0.01)
             if not is_locked:
-                logging.warning('USRP LO did not lock within %.1f s', USRP_LO_LOCK_TIMEOUT_S)
+                logging.warning("USRP LO did not lock within %.1f s", USRP_LO_LOCK_TIMEOUT_S)
         else:
-            logging.warning('USRP has no lo_locked sensor; not waiting for the LO to lock')
+            logging.warning("USRP has no lo_locked sensor; not waiting for the LO to lock")
