@@ -32,6 +32,9 @@ tools = [
     "matplotlib",  # plotting in tools/; not needed by MIKE itself
 ]
 
+[project.scripts]
+mike = "middle_key.main:main"
+
 [project.urls]
 Repository = "https://github.com/hark130/middle-key"
 
