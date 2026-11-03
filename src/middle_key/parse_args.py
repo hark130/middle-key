@@ -5,8 +5,10 @@ import argparse
 import os
 # Third Party Imports
 # Local Imports
-from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_OUT, CLI_OUT_DEFAULT)
-from middle_key.radio.constants import RADIO_GAIN_DB
+from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_OUT, CLI_OUT_DEFAULT,
+                                  CLI_PPM, CLI_RADIO)
+from middle_key.radio import RadioType
+from middle_key.radio.constants import RADIO_FREQ_CORRECTION_PPM, RADIO_GAIN_DB
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,6 +28,13 @@ def parse_args() -> argparse.Namespace:
                         required=False, help="RF gain in dB")
     parser.add_argument(f"-{CLI_OUT[0]}", f"--{CLI_OUT}", type=str, default=CLI_OUT_DEFAULT,
                         required=False, help="Output directory for wav files")
+    parser.add_argument(f"-{CLI_PPM[0]}", f"--{CLI_PPM}", type=int,
+                        default=RADIO_FREQ_CORRECTION_PPM, required=False,
+                        help="Radio oscillator error to correct, in ppm (RTL-SDR only)")
+    parser.add_argument(f"-{CLI_RADIO[0]}", f"--{CLI_RADIO}", type=str,
+                        default=RadioType.USRP.value, required=False,
+                        choices=[radio_type.value for radio_type in RadioType],
+                        help="SDR family")
 
     # PARSE AND VALIDATE THEM
     args = parser.parse_args()
