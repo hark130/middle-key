@@ -8,12 +8,12 @@ import logging
 # Local Imports
 from middle_key.burst_recorder import Burst
 from middle_key.channel_monitor import ChannelMonitor
-from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_OUT, EXIT_FAILURE,
-                                  EXIT_SUCCESS)
+from middle_key.constants import (CLI_DEBUG, CLI_FREQ, CLI_GAIN, CLI_OUT, CLI_PPM, CLI_RADIO,
+                                  EXIT_FAILURE, EXIT_SUCCESS)
 from middle_key.demod import extract_normal_audio
 from middle_key.io import write_wav
 from middle_key.parse_args import parse_args
-from middle_key.radio import RadioSettings, create_sdr
+from middle_key.radio import RadioSettings, RadioType, create_sdr
 from middle_key.radio.constants import RADIO_OFFSET_HZ
 
 
@@ -104,7 +104,9 @@ def main() -> int:
     # LISTEN
     try:
         with create_sdr(RadioSettings(center_freq=channel_freq - RADIO_OFFSET_HZ,
-                                      gain=getattr(args, CLI_GAIN))) as sdr:
+                                      gain=getattr(args, CLI_GAIN),
+                                      radio_type=RadioType(getattr(args, CLI_RADIO)),
+                                      freq_correction_ppm=getattr(args, CLI_PPM))) as sdr:
             print(f"Listening on {channel_freq / 1e6:.3f} MHz: SDR tuned to "
                   f"{sdr.actual_settings.center_freq / 1e6:.3f} MHz at "
                   f"{sdr.actual_settings.sample_rate:.0f} S/s, "
