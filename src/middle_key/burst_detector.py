@@ -61,6 +61,9 @@ class BurstDetector:  # pylint: disable=too-many-instance-attributes
     Attributes:
         floor_db: The current noise floor estimate, in dBFS (None during warm-up).
         is_open: True while a transmission is in progress (from OPENED until CLOSED).
+        max_lookback_len: The farthest, in samples, an OPENED event's sample_index can point
+            before the start of the chunk that reported it.  Whatever keeps samples for the
+            detector's events (e.g., BurstRecorder) needs at least this much history.
     """
 
     # CORE METHODS
@@ -94,6 +97,8 @@ class BurstDetector:  # pylint: disable=too-many-instance-attributes
         self._confirm_len = round(confirm_s * channel_rate)              # Confirm time, samples
         self._hang_len = round(hang_s * channel_rate)                    # Hang time, samples
         self._warmup_frames = math.ceil(BURST_WARMUP_S / BURST_FRAME_S)  # Frames before detecting
+        # How far back an OPENED can point: the confirm time, rounded up to a whole frame
+        self.max_lookback_len = self._confirm_len + self._frame_len
         # Recent frame powers, for the noise floor (oldest drop off automatically)
         self._floor_history = deque(maxlen=math.ceil(BURST_FLOOR_WINDOW_S / BURST_FRAME_S))
 
