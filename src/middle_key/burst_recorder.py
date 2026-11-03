@@ -7,8 +7,9 @@ transmission is open.  On CLOSED it cuts out exactly one complete transmission a
 A transmission still open when the stream stops is never returned, so there are no partial
 bursts.
 
-USAGE:
-    recorder = BurstRecorder(channel_rate=48_000, channel_freq=119.8e6)
+USAGE (normally through ChannelMonitor, which keeps the recorder and detector in step):
+    recorder = BurstRecorder(channel_rate=48_000, channel_freq=119.8e6,
+                             lookback_len=detector.max_lookback_len)
     for chunk in sdr.stream_samples():
         channel = channelizer.process_chunk(chunk)
         for burst in recorder.process_chunk(channel, detector.process_chunk(channel)):
@@ -24,7 +25,7 @@ import logging
 import numpy as np
 # Local Imports
 from middle_key.burst_detector import BurstEvent, BurstEventType
-from middle_key.constants import BURST_CONFIRM_S, BURST_FRAME_S, BURST_PAD_S
+from middle_key.constants import BURST_PAD_S
 
 
 @dataclass(frozen=True)
@@ -56,31 +57,31 @@ class BurstRecorder:  # pylint: disable=too-many-instance-attributes
     """
 
     # CORE METHODS
-    def __init__(self, channel_rate: float, channel_freq: float, pad_s: float = BURST_PAD_S,
-                 confirm_s: float = BURST_CONFIRM_S) -> None:
+    def __init__(self, channel_rate: float, channel_freq: float, lookback_len: int,
+                 pad_s: float = BURST_PAD_S) -> None:
         """BurstRecorder ctor.
 
         Args:
             channel_rate: The channel's sample rate in samples per second.
             channel_freq: The channel's RF frequency, in Hz (copied into each Burst).
+            lookback_len: How far, in samples, the detector's OPENED events can point back:
+                use its max_lookback_len.
             pad_s: [OPTIONAL] Extra audio to keep before and after each transmission.
-            confirm_s: [OPTIONAL] The detector's confirm time: how far back an OPENED can point.
-                Must match the BurstDetector's, so enough history is kept.
 
         Raises:
-            ValueError: A non-positive rate, or a negative time.
+            ValueError: A non-positive rate, or a negative lookback or pad.
         """
         # INPUT VALIDATION
-        if channel_rate <= 0 or pad_s < 0 or confirm_s < 0:
+        if channel_rate <= 0 or lookback_len < 0 or pad_s < 0:
             raise ValueError(f"Bad recorder settings: channel_rate={channel_rate}, "
-                             f"pad_s={pad_s}, confirm_s={confirm_s}")
+                             f"lookback_len={lookback_len}, pad_s={pad_s}")
 
         # SETTINGS
         self._channel_rate = channel_rate            # Samples per second
         self._channel_freq = channel_freq            # Channel frequency, Hz
         self._pad_len = round(pad_s * channel_rate)  # Padding at each end, samples
-        # History to keep: as far back as an OPENED can point, plus the pad and one spare frame
-        self._history_len = round((confirm_s + pad_s + BURST_FRAME_S) * channel_rate)
+        # History to keep: as far back as an OPENED can point, plus the pad in front of it
+        self._history_len = lookback_len + self._pad_len
 
         # STREAMING STATE (set by reset())
         self._history = deque()    # (start index, chunk) pairs: recent chunks, oldest first
@@ -170,9 +171,9 @@ class BurstRecorder:  # pylint: disable=too-many-instance-attributes
     def _trim_history(self) -> None:
         """Drop chunks that end too far before the newest chunk for any event to reach them.
 
-        Events reported during the newest chunk can point back up to the confirm time before
-        it starts, and a burst's start is padded by pad_s more, so the history must reach that
-        far back from the start of the newest chunk (not from its end).
+        Events reported during the newest chunk can point back up to lookback_len samples
+        before it starts, and a burst's start is padded by pad_s more, so the history must
+        reach that far back from the start of the newest chunk (not from its end).
         """
         # LOCAL VARIABLES
         newest_start = self._history[-1][0]  # Absolute index of the newest chunk's first sample
